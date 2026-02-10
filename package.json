@@ -7,7 +7,10 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node scripts/migrate-db.js",
+    "db:test": "node scripts/test-database.js",
+    "db:backup": "node scripts/backup-database.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
