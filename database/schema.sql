@@ -109,18 +109,13 @@ CREATE TABLE IF NOT EXISTS follower_credentials (
 -- ============================================
 CREATE TABLE IF NOT EXISTS risk_config (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  follower_id VARCHAR(255) NOT NULL,
-  lot_multiplier DECIMAL(10, 2) NOT NULL DEFAULT 1.0,
-  max_quantity INT,
-  max_order_value DECIMAL(15, 2),
-  max_daily_loss DECIMAL(15, 2),
+  follower_id VARCHAR(255) NOT NULL UNIQUE,
   daily_loss_current DECIMAL(15, 2) DEFAULT 0,
   daily_loss_date DATE,
   stop_trading_if_loss_exceeded BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (follower_id) REFERENCES followers(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_follower (follower_id),
   INDEX idx_follower_id (follower_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -214,8 +209,8 @@ CREATE TABLE IF NOT EXISTS sessions (
 -- ============================================
 CREATE TABLE IF NOT EXISTS trade_events (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  copy_trade_id VARCHAR(255),
-  follower_id VARCHAR(255),
+  copy_trade_id VARCHAR(255) NOT NULL,
+  follower_id VARCHAR(255) NOT NULL,
   event_type ENUM('CREATED', 'PENDING', 'EXECUTING', 'SUCCESS', 'FAILED', 'CANCELLED', 'AMENDED', 'FILLED') NOT NULL,
   event_data JSON,
   message TEXT,
@@ -258,6 +253,7 @@ CREATE TABLE IF NOT EXISTS performance_metrics (
   total_qty INT DEFAULT 0,
   realized_pnl DECIMAL(15, 2) DEFAULT 0,
   pnl_percentage DECIMAL(10, 2) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (follower_id) REFERENCES followers(id) ON DELETE CASCADE,
   UNIQUE KEY unique_follower_date (follower_id, date),
@@ -285,7 +281,9 @@ CREATE TABLE IF NOT EXISTS system_settings (
 CREATE INDEX idx_copy_trades_date_range ON copy_trades(created_at DESC);
 CREATE INDEX idx_copy_trades_follower_status ON copy_trades(follower_id, status);
 CREATE INDEX idx_followers_master_status ON followers(master_id, status);
+CREATE INDEX idx_followers_master_created ON followers(master_id, created_at DESC);
 CREATE INDEX idx_audit_logs_timestamp_range ON audit_logs(created_at DESC);
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
 
 -- ============================================
 -- INSERT SAMPLE SYSTEM SETTINGS
@@ -342,9 +340,9 @@ SELECT
   f.id,
   f.follower_name,
   f.master_id,
-  COUNT(*) as total_trades,
+  COUNT(ct.id) as total_trades,
   SUM(CASE WHEN ct.status = 'SUCCESS' THEN 1 ELSE 0 END) as successful_trades,
-  ROUND((SUM(CASE WHEN ct.status = 'SUCCESS' THEN 1 ELSE 0 END) / COUNT(*) * 100), 2) as success_rate,
+  ROUND(COALESCE((SUM(CASE WHEN ct.status = 'SUCCESS' THEN 1 ELSE 0 END) / NULLIF(COUNT(ct.id), 0) * 100), 0), 2) as success_rate,
   SUM(CASE WHEN ct.side = 'BUY' THEN 1 ELSE 0 END) as buy_trades,
   SUM(CASE WHEN ct.side = 'SELL' THEN 1 ELSE 0 END) as sell_trades,
   MAX(ct.created_at) as last_trade_time

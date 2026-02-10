@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
 
     console.log('✅ OAuth connection successful for:', { 
       userId,
-      role: user.role,
+      role: userObj.role,
       authMethod: 'oauth'
     });
 

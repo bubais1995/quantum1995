@@ -1,6 +1,10 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { getAccountToken } from '@/lib/alice';
 import { cookies } from 'next/headers';
+import fs from 'fs';
+import path from 'path';
+
+const MASTER_FILE = process.env.QUANTUM_MASTER_ACCOUNT_FILE || '.master.account';
 
 /**
  * Fetch real-time Trade Book data from Alice Blue API
@@ -8,9 +12,22 @@ import { cookies } from 'next/headers';
  */
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
-  const accountId = url.searchParams.get('accountId');
+  let accountId = url.searchParams.get('accountId');
 
   try {
+    // If no accountId provided, try to read the master account file
+    if (!accountId) {
+      try {
+        const masterPath = path.join(process.cwd(), MASTER_FILE);
+        if (fs.existsSync(masterPath)) {
+          accountId = fs.readFileSync(masterPath, 'utf-8').trim();
+          console.log('[TRADE-BOOK] Using master account from file:', accountId);
+        }
+      } catch (e) {
+        console.warn('[TRADE-BOOK] Failed to read master account file:', e);
+      }
+    }
+
     // Get the saved OAuth token for this account
     const token = getAccountToken(accountId || 'Master');
     if (!token) {

@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, CheckCircle, Loader2, LogOut, PlugConnected } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, LogOut, Plug } from 'lucide-react';
 import { useAuth } from '@/context/auth-context';
 
 interface OAuthConnection {
@@ -41,7 +41,10 @@ export function OAuthConnectDialog() {
   const checkConnectionStatus = async () => {
     try {
       setChecking(true);
-      const res = await fetch('/api/alice/oauth-status', {
+      // For OAuth users, use their account ID (user.id is the account ID like 2548613)
+      // For followers, use 'Master' to check master account status
+      const accountId = user?.id || 'Master';
+      const res = await fetch(`/api/alice/oauth-status?accountId=${encodeURIComponent(accountId)}`, {
         headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
@@ -143,7 +146,7 @@ export function OAuthConnectDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <PlugConnected className="w-4 h-4" />
+          <Plug className="w-4 h-4" />
           AliceBlue Connection
         </Button>
       </DialogTrigger>
@@ -251,7 +254,7 @@ export function OAuthConnectDialog() {
                   </>
                 ) : (
                   <>
-                    <PlugConnected className="w-4 h-4" />
+                    <Plug className="w-4 h-4" />
                     Connect to AliceBlue
                   </>
                 )}

@@ -9,7 +9,7 @@ import {
   FileText,
   BookOpen,
   Database,
-  PlugConnected,
+  Plug,
 } from 'lucide-react';
 import {
   SidebarMenuItem,
@@ -35,7 +35,7 @@ export function NavItems() {
       <SidebarMenuItem>
         <SidebarMenuButton asChild tooltip="Connections" isActive={pathname.startsWith('/connections')}>
           <Link href="/connections">
-            <PlugConnected />
+            <Plug />
             <span>Connections</span>
           </Link>
         </SidebarMenuButton>

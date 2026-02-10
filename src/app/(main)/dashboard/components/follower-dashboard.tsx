@@ -27,7 +27,7 @@ import { TradesTable } from './trades-table';
 import { useAccount } from '@/context/account-context';
 import { FollowerPortfolioSummary } from './follower-portfolio-summary';
 import { FollowerTradesTable } from './follower-trades-table';
-import { FollowerCopyTradesBoard } from '../components/follower-copy-trades-board';
+import { FollowerCopyTradesBoard } from './follower-copy-trades-board';
 import { useToast } from '@/hooks/use-toast';
 
 export function FollowerDashboard() {
